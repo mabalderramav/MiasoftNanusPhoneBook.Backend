@@ -1,9 +1,9 @@
-# Miasoft Nanus PhoneBook
+# MiasoftNanus PhoneBook Backend
 
-A corporate phone book (directory) REST API built with **ASP.NET Core Minimal APIs on .NET 10**, following
-**Clean Architecture**, **Domain-Driven Design** and a hand-written **CQRS** dispatcher (no MediatR).
-Data is stored in **PostgreSQL** through **Entity Framework Core**, and agenda photos are stored on the local
-file system.
+The backend of **MiasoftNanus PhoneBook**: a corporate phone book (directory) REST API built with
+**ASP.NET Core Minimal APIs on .NET 10**, following **Clean Architecture**, **Domain-Driven Design** and a
+hand-written **CQRS** dispatcher (no MediatR). Data is stored in **PostgreSQL** through **Entity Framework Core**,
+and agenda photos are stored on the local file system.
 
 The API manages the people of an organization (agendas), where they sit (work areas, workstations, locations)
 and the users and profiles that administer the directory.
@@ -41,21 +41,22 @@ and the users and profiles that administer the directory.
 | Validation         | `FluentValidation` + domain validation through `Result` / `Error` |
 | Logging            | Serilog (console + daily rolling file)                            |
 | File storage       | Local file system (`IFileStorage` → `LocalFileStorage`)           |
-| Solution format    | `MiasoftNanusPhoneBook.slnx`                                      |
+| Solution format    | `MiasoftNanusPhoneBook.Backend.slnx`                              |
 
 ## Solution structure
 
 ```
-MiasoftNanusPhoneBook/
-├── .agents/features/            # Feature specs per ticket (MNPB-xxx.md) + Template.md
-├── global.json                  # Pinned .NET SDK
-├── global_command.txt           # Useful SDK / EF Core commands
-├── MiasoftNanusPhoneBook.slnx   # Solution file
+MiasoftNanusPhoneBook.Backend/
+├── .agents/features/                             # Feature specs per ticket (MNPB-xxx.md) + Template.md
+├── global.json                                   # Pinned .NET SDK
+├── global_command.txt                            # Useful SDK / EF Core commands
+├── MiasoftNanusPhoneBook.Backend.slnx            # Solution file
+├── MiasoftNanusPhoneBook.Backend.sln.DotSettings # Rider/ReSharper settings
 └── src/
-    ├── MiasoftNanus.PhoneBook.Domain/          # Entities, value objects, errors, contracts
-    ├── MiasoftNanus.PhoneBook.Application/     # Use cases (commands/queries), services, abstractions
-    ├── MiasoftNanus.PhoneBook.Infrastructure/  # EF Core, repositories, storage, security
-    └── MiasoftNanus.PhoneBook.WebApi/          # Minimal API host, endpoints, DTOs, mappers
+    ├── MiasoftNanus.PhoneBook.Domain/            # Entities, value objects, errors, contracts
+    ├── MiasoftNanus.PhoneBook.Application/       # Use cases (commands/queries), services, abstractions
+    ├── MiasoftNanus.PhoneBook.Infrastructure/    # EF Core, repositories, storage, security
+    └── MiasoftNanus.PhoneBook.WebApi/            # Minimal API host, endpoints, DTOs, mappers
 ```
 
 Dependencies point inward:
@@ -185,8 +186,8 @@ HTTP request
 ### Build
 
 ```bash
-dotnet restore MiasoftNanusPhoneBook.slnx
-dotnet build MiasoftNanusPhoneBook.slnx
+dotnet restore MiasoftNanusPhoneBook.Backend.slnx
+dotnet build MiasoftNanusPhoneBook.Backend.slnx
 ```
 
 ### Run
