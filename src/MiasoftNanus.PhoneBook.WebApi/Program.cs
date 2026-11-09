@@ -15,6 +15,7 @@ try
     #region Services
 
     builder.Services.AddOpenApi();
+    builder.Services.AddProblemDetailsAndExceptionsBuilderExtensions();
     builder.Services.AddApplicationConfigurationServices(builder.Configuration);
     builder.Services.AddApplicationLayersServices(builder.Configuration);
 
@@ -22,17 +23,20 @@ try
 
     var app = builder.Build();
 
-    // Configure the HTTP request pipeline.
+    #region Middleware
+
+    app.UseExceptionHandler();
+    app.UseStatusCodePages();
     if (builder.Environment.IsDevelopment())
     {
         app.MapOpenApi();
         await app.MigrateDatabaseAsync();
     }
 
-    // Do not enable request/response body logging (e.g., UseHttpLogging with RequestBody) without excluding
-    // /users: it would log plain-text passwords.
     app.UseHttpsRedirection();
     app.MapEndpoints();
+
+    #endregion
 
     await app.RunAsync();
 }
