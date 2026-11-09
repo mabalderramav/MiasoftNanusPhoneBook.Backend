@@ -3,8 +3,10 @@ using MiasoftNanus.PhoneBook.Domain.Agendas.Errors;
 using MiasoftNanus.PhoneBook.Domain.Agendas.Services;
 using MiasoftNanus.PhoneBook.WebApi.Agendas.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.Agendas.Mappers;
+using MiasoftNanus.PhoneBook.WebApi.Config;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Options;
 
 namespace MiasoftNanus.PhoneBook.WebApi.Agendas.Endpoints;
 
@@ -137,9 +139,16 @@ public static class AgendaEndpoints
 
     private static async Task<IResult> DeletePhotoAgenda(
         Guid id,
+        [FromHeader(Name = "X-Api-Key")] string? apiKey,
+        IOptions<ApiConfig> apiConfig,
         IAgendaService agendaService,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(apiKey) || apiKey != apiConfig.Value.TokenAdmin)
+        {
+            return TypedResults.Unauthorized();
+        }
+
         var result = await agendaService.DeletePhotoAsync(id, cancellationToken);
         if (result.IsFailure)
             return ToErrorResult(result.Error);
@@ -157,9 +166,16 @@ public static class AgendaEndpoints
 
     private static async Task<IResult> DeleteAgenda(
         Guid id,
+        [FromHeader(Name = "X-Api-Key")] string? apiKey,
+        IOptions<ApiConfig> apiConfig,
         IAgendaService agendaService,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrEmpty(apiKey) || apiKey != apiConfig.Value.TokenAdmin)
+        {
+            return TypedResults.Unauthorized();
+        }
+
         var result = await agendaService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
             ? TypedResults.NotFound(result.Error)

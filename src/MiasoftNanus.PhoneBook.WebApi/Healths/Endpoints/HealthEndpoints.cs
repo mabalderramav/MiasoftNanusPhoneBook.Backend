@@ -55,7 +55,6 @@ public static class HealthEndpoints
                 {
                     environment,
                     timeout = apiConfig.Timeout,
-
                     baseUrl = apiConfig.BaseUrl
                 });
             });
