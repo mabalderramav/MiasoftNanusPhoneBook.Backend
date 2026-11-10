@@ -9,3 +9,8 @@ dotnet add package FluentValidation --version 12.1.1 --project ./src/MiasoftNanu
 dotnet add package MediatR --version 14.2.0 --project ./src/MiasoftNanus.PhoneBook.Application/MiasoftNanus.PhoneBook.Application.csproj
 # run on Linux
 dotnet add package MediatR --version 14.2.0 --project ./src/MiasoftNanus.PhoneBook.Application/MiasoftNanus.PhoneBook.Application.csproj
+# Add Microsoft.Extensions.Logging.Abstractions
+# run on Windows
+dotnet add .\src\MiasoftNanus.PhoneBook.Application\MiasoftNanus.PhoneBook.Application.csproj package Microsoft.Extensions.Logging.Abstractions --version 10.0.13
+# run on Linux
+dotnet add ./src/MiasoftNanus.PhoneBook.Application/MiasoftNanus.PhoneBook.Application.csproj package Microsoft.Extensions.Logging.Abstractions --version 10.0.13

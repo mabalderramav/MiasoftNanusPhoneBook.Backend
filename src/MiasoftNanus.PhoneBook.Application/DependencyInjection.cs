@@ -1,3 +1,4 @@
+using MiasoftNanus.PhoneBook.Application.Abstractions.Behaviors;
 using MiasoftNanus.PhoneBook.Application.Abstractions.CQRS;
 using MiasoftNanus.PhoneBook.Application.Abstractions.Notifications;
 using MiasoftNanus.PhoneBook.Application.Agendas.Services;
@@ -26,6 +27,9 @@ public static class DependencyInjection
     {
         services.AddScoped<IDispatcher, Dispatcher>();
         services.AddScoped<IPublisher, Publisher>();
+
+        // Register command pipeline behaviors. Order matters: the first registered behavior is the outermost one.
+        services.AddScoped(typeof(ICommandPipelineBehavior<,>), typeof(LoggingBehavior<,>));
 
         // Register application services.
         services.AddScoped<IProfileService, ProfileService>();
