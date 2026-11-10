@@ -1,4 +1,6 @@
 ﻿using System.Collections.Concurrent;
+using MiasoftNanus.PhoneBook.Application.Abstractions.Behaviors;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MiasoftNanus.PhoneBook.Application.Abstractions.CQRS;
 
@@ -14,7 +16,8 @@ public sealed class Dispatcher(IServiceProvider servicesProvider) : IDispatcher
 
     /// <summary>
     /// Asynchronously sends a command to its corresponding handler for processing
-    /// and returns the result. This method is a core part of the CQRS pattern
+    /// and returns the result. The registered <see cref="ICommandPipelineBehavior{TCommand, TResult}"/>
+    /// instances run around the handler. This method is a core part of the CQRS pattern
     /// implementation within the application.
     /// </summary>
     /// <typeparam name="TResult">The type of the result returned by the command handler.</typeparam>
@@ -115,7 +118,9 @@ public sealed class Dispatcher(IServiceProvider servicesProvider) : IDispatcher
     /// The CommandHandlerInvoker is a private sealed class responsible for invoking
     /// the appropriate command handler to process a specific command. It ensures
     /// that commands are executed by their corresponding handlers in a decoupled
-    /// manner, adhering to the CQRS pattern.
+    /// manner, adhering to the CQRS pattern. The registered
+    /// <see cref="ICommandPipelineBehavior{TCommand, TResult}"/> instances run around the handler,
+    /// the first registered one being the outermost.
     /// </summary>
     /// <typeparam name="TCommand">
     /// The type of the command to be handled. It must implement the ICommand interface
@@ -134,7 +139,18 @@ public sealed class Dispatcher(IServiceProvider servicesProvider) : IDispatcher
                               as ICommandHandler<TCommand, TResult>
                           ?? throw InstantiateHandlerNotFoundException(typeof(TCommand), "command");
 
-            return handler.HandleAsync((TCommand)command, cancellationToken);
+            var typedCommand = (TCommand)command;
+            CommandHandlerDelegate<TResult> pipeline = () => handler.HandleAsync(typedCommand, cancellationToken);
+
+            // Wrap from the last registered behavior to the first, so the first registered one runs outermost.
+            var behaviors = services.GetServices<ICommandPipelineBehavior<TCommand, TResult>>().Reverse();
+            foreach (var behavior in behaviors)
+            {
+                var next = pipeline;
+                pipeline = () => behavior.HandleAsync(typedCommand, next, cancellationToken);
+            }
+
+            return pipeline();
         }
     }
 
