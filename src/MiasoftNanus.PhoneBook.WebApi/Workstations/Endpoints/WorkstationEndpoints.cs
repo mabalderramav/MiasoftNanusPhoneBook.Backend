@@ -13,11 +13,17 @@ public static class WorkstationEndpoints
     public static void MapWorkstationEndpoints(this IEndpointRouteBuilder app)
     {
         var workstationGroup = app.MapGroup("/workstations");
-        workstationGroup.MapGet("/", GetWorkstationAll);
-        workstationGroup.MapGet("/{id:guid}", GetWorkstationById);
-        workstationGroup.MapPost("/", CreateWorkstation);
-        workstationGroup.MapPut("/{id:guid}", UpdateWorkstation);
-        workstationGroup.MapDelete("/{id:guid}", DeleteWorkstation);
+        workstationGroup.MapGet("/", GetWorkstationAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workstationGroup.MapGet($"/{{id:guid}}", GetWorkstationById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workstationGroup.MapPost("/", CreateWorkstation)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        workstationGroup.MapPut($"/{{id:guid}}", UpdateWorkstation)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workstationGroup.MapDelete($"/{{id:guid}}", DeleteWorkstation)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetWorkstationAll(

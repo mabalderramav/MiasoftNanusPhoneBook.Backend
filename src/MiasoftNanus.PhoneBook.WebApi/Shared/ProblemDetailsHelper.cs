@@ -56,4 +56,18 @@ public static class ProblemDetailsHelper
     {
         return CreateProblemDetails(StatusCodes.Status400BadRequest, result);
     }
+
+    /// <summary>
+    /// Maps a failed operation result to an HTTP error result: 404 Not Found when the result error is one of
+    /// <paramref name="notFoundErrors"/>, otherwise 400 Bad Request. Both use a <see cref="ProblemDetails"/> body.
+    /// </summary>
+    /// <param name="result">The failed operation result.</param>
+    /// <param name="notFoundErrors">The domain errors that mean "resource not found".</param>
+    /// <returns>A 404 or 400 <see cref="IResult"/> whose body is <see cref="ProblemDetails"/>.</returns>
+    public static IResult ToErrorResult(Result result, params Error[] notFoundErrors)
+    {
+        return notFoundErrors.Contains(result.Error)
+            ? TypedResults.NotFound(CreateNotFoundProblemDetails(result))
+            : TypedResults.BadRequest(CreateBadRequestProblemDetails(result));
+    }
 }

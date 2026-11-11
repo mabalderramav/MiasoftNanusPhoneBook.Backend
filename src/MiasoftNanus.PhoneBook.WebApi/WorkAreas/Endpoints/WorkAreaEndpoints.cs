@@ -13,11 +13,17 @@ public static class WorkAreaEndpoints
     public static void MapWorkAreaEndpoints(this IEndpointRouteBuilder app)
     {
         var workAreaGroup = app.MapGroup("/work-areas");
-        workAreaGroup.MapGet("/", GetWorkAreaAll);
-        workAreaGroup.MapGet("/{id:guid}", GetWorkAreaById);
-        workAreaGroup.MapPost("/", CreateWorkArea);
-        workAreaGroup.MapPut("/{id:guid}", UpdateWorkArea);
-        workAreaGroup.MapDelete("/{id:guid}", DeleteWorkArea);
+        workAreaGroup.MapGet("/", GetWorkAreaAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workAreaGroup.MapGet("/{id:guid}", GetWorkAreaById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workAreaGroup.MapPost("/", CreateWorkArea)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        workAreaGroup.MapPut("/{id:guid}", UpdateWorkArea)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        workAreaGroup.MapDelete("/{id:guid}", DeleteWorkArea)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetWorkAreaAll(

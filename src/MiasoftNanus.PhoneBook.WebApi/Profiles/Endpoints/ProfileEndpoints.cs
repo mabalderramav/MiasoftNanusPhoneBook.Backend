@@ -13,11 +13,17 @@ public static class ProfileEndpoints
     public static void MapProfileEndpoints(this IEndpointRouteBuilder app)
     {
         var profileGroup = app.MapGroup("/profiles");
-        profileGroup.MapGet("/", GetProfileAll);
-        profileGroup.MapGet("/{id:guid}", GetProfileById);
-        profileGroup.MapPost("/", CreateProfile);
-        profileGroup.MapPut("/{id:guid}", UpdateProfile);
-        profileGroup.MapDelete("/{id:guid}", DeleteProfile);
+        profileGroup.MapGet("/", GetProfileAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapGet($"/{{id:guid}}", GetProfileById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapPost("/", CreateProfile)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        profileGroup.MapPut($"/{{id:guid}}", UpdateProfile)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapDelete($"/{{id:guid}}", DeleteProfile)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetProfileAll(
@@ -86,4 +92,4 @@ public static class ProfileEndpoints
             ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
-}
+}

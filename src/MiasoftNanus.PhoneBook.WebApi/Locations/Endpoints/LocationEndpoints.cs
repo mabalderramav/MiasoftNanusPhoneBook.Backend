@@ -13,11 +13,17 @@ public static class LocationEndpoints
     public static void MapLocationEndpoints(this IEndpointRouteBuilder app)
     {
         var locationGroup = app.MapGroup("/locations");
-        locationGroup.MapGet("/", GetLocationAll);
-        locationGroup.MapGet("/{id:guid}", GetLocationById);
-        locationGroup.MapPost("/", CreateLocation);
-        locationGroup.MapPut("/{id:guid}", UpdateLocation);
-        locationGroup.MapDelete("/{id:guid}", DeleteLocation);
+        locationGroup.MapGet("/", GetLocationAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        locationGroup.MapGet("/{id:guid}", GetLocationById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        locationGroup.MapPost("/", CreateLocation)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        locationGroup.MapPut("/{id:guid}", UpdateLocation)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        locationGroup.MapDelete("/{id:guid}", DeleteLocation)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetLocationAll(
