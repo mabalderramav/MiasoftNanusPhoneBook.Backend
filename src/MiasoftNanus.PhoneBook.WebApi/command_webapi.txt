@@ -11,6 +11,12 @@ dotnet run --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.
 # run on Linux with connection string from database
 dotnet run --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj --launch-profile Development -- --ConnectionStrings:DefaultConnection='[Database Connection String]'
 
+# list packages
+# run on Windows
+dotnet list .\src\MiasoftNanus.PhoneBook.WebApi\  package
+# run on Linux
+dotnet list ./src/MiasoftNanus.PhoneBook.WebApi/ package
+
 # init user-secrets
 # run on Windows
 dotnet user-secrets --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.WebApi.csproj init
@@ -49,7 +55,25 @@ dotnet add package Microsoft.EntityFrameworkCore.Design --version 10.0.12 --proj
 
 # add Microsoft.EntityFrameworkCore.Tools
 # Run on Windows
-dotnet add package Microsoft.EntityFrameworkCore.Tools --version 10.0.12 --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj
+dotnet add package Microsoft.EntityFrameworkCore.Tools --version 10.0.12 --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.WebApi.csproj
 # Run on Linux
 dotnet add package Microsoft.EntityFrameworkCore.Tools --version 10.0.12 --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj
+
+# add Swashbuckle.AspNetCore.SwaggerUI
+# Run on Windows
+dotnet add package Swashbuckle.AspNetCore.SwaggerUI --version 10.3.1 --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.WebApi.csproj
+# Run on Linux
+dotnet add package Swashbuckle.AspNetCore.SwaggerUI --version 10.3.1 --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj
+
+# add Swashbuckle.AspNetCore.ReDoc
+# Run on Windows
+dotnet add package Swashbuckle.AspNetCore.ReDoc --version 10.3.1 --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.WebApi.csproj
+# Run on Linux
+dotnet add package Swashbuckle.AspNetCore.ReDoc --version 10.3.1 --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj
+
+# add Scalar.AspNetCore
+# Run on Windows
+dotnet add package Scalar.AspNetCore --version 2.20.0 --project .\src\MiasoftNanus.PhoneBook.WebApi\MiasoftNanus.PhoneBook.WebApi.csproj
+# Run on Linux
+dotnet add package Scalar.AspNetCore --version 2.20.0 --project ./src/MiasoftNanus.PhoneBook.WebApi/MiasoftNanus.PhoneBook.WebApi.csproj
 
