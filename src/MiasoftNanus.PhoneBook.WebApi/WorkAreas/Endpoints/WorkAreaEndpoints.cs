@@ -1,6 +1,7 @@
 using MiasoftNanus.PhoneBook.Domain.WorkAreas.Services;
 using MiasoftNanus.PhoneBook.WebApi.WorkAreas.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.WorkAreas.Mappers;
+using MiasoftNanus.PhoneBook.WebApi.Shared;
 
 namespace MiasoftNanus.PhoneBook.WebApi.WorkAreas.Endpoints;
 
@@ -25,7 +26,7 @@ public static class WorkAreaEndpoints
     {
         var result = await workAreaService.GetAllAsync(cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -37,7 +38,7 @@ public static class WorkAreaEndpoints
     {
         var result = await workAreaService.GetByIdAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -49,11 +50,11 @@ public static class WorkAreaEndpoints
     {
         var workAreaResult = createUpdateWorkAreaDto.ToEntity();
         if (workAreaResult.IsFailure)
-            return TypedResults.BadRequest(workAreaResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(workAreaResult));
 
         var result = await workAreaService.CreateAsync(workAreaResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.BadRequest(result.Error)
+            ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
             : TypedResults.Created($"/work-areas/{result.Value.Id}", result.Value.ToDto());
     }
 
@@ -65,11 +66,11 @@ public static class WorkAreaEndpoints
     {
         var workAreaResult = createUpdateWorkAreaDto.ToEntity();
         if (workAreaResult.IsFailure)
-            return TypedResults.BadRequest(workAreaResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(workAreaResult));
 
         var result = await workAreaService.UpdateAsync(id, workAreaResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.Ok(result.Value.ToDto());
     }
 
@@ -80,7 +81,7 @@ public static class WorkAreaEndpoints
     {
         var result = await workAreaService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
 }

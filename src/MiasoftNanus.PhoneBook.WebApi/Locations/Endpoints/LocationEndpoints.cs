@@ -1,6 +1,7 @@
 using MiasoftNanus.PhoneBook.Domain.Locations.Services;
 using MiasoftNanus.PhoneBook.WebApi.Locations.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.Locations.Mappers;
+using MiasoftNanus.PhoneBook.WebApi.Shared;
 
 namespace MiasoftNanus.PhoneBook.WebApi.Locations.Endpoints;
 
@@ -25,7 +26,7 @@ public static class LocationEndpoints
     {
         var result = await locationService.GetAllAsync(cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         var locationDtos = result.Value.ToDto();
         return TypedResults.Ok(locationDtos);
@@ -38,7 +39,7 @@ public static class LocationEndpoints
     {
         var result = await locationService.GetByIdAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         var locationDto = result.Value.ToDto();
         return TypedResults.Ok(locationDto);
@@ -51,11 +52,11 @@ public static class LocationEndpoints
     {
         var locationResult = createUpdateLocationDto.ToEntity();
         if (locationResult.IsFailure)
-            return TypedResults.BadRequest(locationResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(locationResult));
 
         var result = await locationService.CreateAsync(locationResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.BadRequest(result.Error)
+            ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
             : TypedResults.Created($"/locations/{result.Value.Id}", result.Value.ToDto());
     }
 
@@ -67,11 +68,11 @@ public static class LocationEndpoints
     {
         var locationResult = createUpdateLocationDto.ToEntity();
         if (locationResult.IsFailure)
-            return TypedResults.BadRequest(locationResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(locationResult));
 
         var result = await locationService.UpdateAsync(id, locationResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.Ok(result.Value.ToDto());
     }
 
@@ -82,7 +83,7 @@ public static class LocationEndpoints
     {
         var result = await locationService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
 }

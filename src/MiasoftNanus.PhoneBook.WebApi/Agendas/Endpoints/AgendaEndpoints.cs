@@ -4,6 +4,7 @@ using MiasoftNanus.PhoneBook.Domain.Agendas.Services;
 using MiasoftNanus.PhoneBook.WebApi.Agendas.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.Agendas.Mappers;
 using MiasoftNanus.PhoneBook.WebApi.Config;
+using MiasoftNanus.PhoneBook.WebApi.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Options;
@@ -44,7 +45,7 @@ public static class AgendaEndpoints
     {
         var result = await agendaService.GetAllAsync(cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -56,7 +57,7 @@ public static class AgendaEndpoints
     {
         var result = await agendaService.GetByIdAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -68,11 +69,11 @@ public static class AgendaEndpoints
     {
         var agendaResult = createUpdateAgendaDto.ToEntity();
         if (agendaResult.IsFailure)
-            return TypedResults.BadRequest(agendaResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(agendaResult));
 
         var result = await agendaService.CreateAsync(agendaResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.BadRequest(result.Error)
+            ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
             : TypedResults.Created($"/agendas/{result.Value.Id}", result.Value.ToDto());
     }
 
@@ -84,11 +85,11 @@ public static class AgendaEndpoints
     {
         var agendaResult = createUpdateAgendaDto.ToEntity();
         if (agendaResult.IsFailure)
-            return TypedResults.BadRequest(agendaResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(agendaResult));
 
         var result = await agendaService.UpdateAsync(id, agendaResult.Value, cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ToErrorResult(result);
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -101,7 +102,7 @@ public static class AgendaEndpoints
     {
         var result = await agendaService.PatchAsync(id, patchAgendaDto.ToAgendaPatchData(), cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ToErrorResult(result);
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -116,7 +117,7 @@ public static class AgendaEndpoints
         var result = await agendaService.UploadPhotoAsync(
             id, content, photo.FileName, photo.Length, cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ToErrorResult(result);
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -128,7 +129,7 @@ public static class AgendaEndpoints
     {
         var result = await agendaService.GetPhotoAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         if (!ContentTypeProvider.TryGetContentType(result.Value.FileName, out var contentType))
             contentType = "application/octet-stream";
@@ -151,17 +152,17 @@ public static class AgendaEndpoints
 
         var result = await agendaService.DeletePhotoAsync(id, cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ToErrorResult(result);
 
         return TypedResults.NoContent();
     }
 
     // A missing agenda or photo is a 404; any other failure (validation, unknown workstation / location, ...) is a 400.
-    private static IResult ToErrorResult(Error error)
+    private static IResult ToErrorResult(Result result)
     {
-        return error == AgendaErrors.AgendaNotFound || error == AgendaErrors.PhotoNotFound
-            ? TypedResults.NotFound(error)
-            : TypedResults.BadRequest(error);
+        return result.Error == AgendaErrors.AgendaNotFound || result.Error == AgendaErrors.PhotoNotFound
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
+            : TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result));
     }
 
     private static async Task<IResult> DeleteAgenda(
@@ -178,7 +179,7 @@ public static class AgendaEndpoints
 
         var result = await agendaService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
 }
