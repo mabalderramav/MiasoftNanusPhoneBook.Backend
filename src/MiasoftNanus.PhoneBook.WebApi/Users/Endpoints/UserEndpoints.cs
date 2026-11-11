@@ -1,8 +1,8 @@
 using MiasoftNanus.PhoneBook.Application.Abstractions.Time;
-using MiasoftNanus.PhoneBook.Domain.Abstractions;
 using MiasoftNanus.PhoneBook.Domain.Users.Errors;
 using MiasoftNanus.PhoneBook.Domain.Users.ObjectValues;
 using MiasoftNanus.PhoneBook.Domain.Users.Services;
+using MiasoftNanus.PhoneBook.WebApi.Shared;
 using MiasoftNanus.PhoneBook.WebApi.Users.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.Users.Mappers;
 
@@ -16,14 +16,24 @@ public static class UserEndpoints
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var userGroup = app.MapGroup("/users");
-        userGroup.MapGet("/", GetUserAll);
-        userGroup.MapGet($"/{{id:guid}}", GetUserById);
-        userGroup.MapPost("/", CreateUser);
-        userGroup.MapPut($"/{{id:guid}}", UpdateUser);
+        userGroup.MapGet("/", GetUserAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        userGroup.MapGet($"/{{id:guid}}", GetUserById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        userGroup.MapPost("/", CreateUser)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        userGroup.MapPut($"/{{id:guid}}", UpdateUser)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapPatch($"/{{id:guid}}", PatchUser)
-            .Accepts<PatchUserDto>("application/merge-patch+json", "application/json");
-        userGroup.MapPut($"/{{id:guid}}/password", ChangeUserPassword);
-        userGroup.MapDelete($"/{{id:guid}}", DeleteUser);
+            .Accepts<PatchUserDto>("application/merge-patch+json", "application/json")
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        userGroup.MapPut($"/{{id:guid}}/password", ChangeUserPassword)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        userGroup.MapDelete($"/{{id:guid}}", DeleteUser)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetUserAll(
@@ -32,7 +42,7 @@ public static class UserEndpoints
     {
         var result = await userService.GetAllAsync(cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -44,7 +54,7 @@ public static class UserEndpoints
     {
         var result = await userService.GetByIdAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -57,11 +67,11 @@ public static class UserEndpoints
     {
         var userResult = createUserDto.ToEntity(dateTimeProvider.CurrentTime);
         if (userResult.IsFailure)
-            return TypedResults.BadRequest(userResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(userResult));
 
         var result = await userService.CreateAsync(userResult.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.BadRequest(result.Error)
+            ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
             : TypedResults.Created($"/users/{result.Value.Id}", result.Value.ToDto());
     }
 
@@ -74,11 +84,11 @@ public static class UserEndpoints
     {
         var userDataResult = updateUserDto.ToUserData(dateTimeProvider.CurrentTime);
         if (userDataResult.IsFailure)
-            return TypedResults.BadRequest(userDataResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(userDataResult));
 
         var result = await userService.UpdateDetailsAsync(id, userDataResult.Value, cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ProblemDetailsHelper.ToErrorResult(result, UserErrors.UserNotFound);
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -91,7 +101,7 @@ public static class UserEndpoints
     {
         var result = await userService.PatchAsync(id, patchUserDto.ToUserPatchData(), cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ProblemDetailsHelper.ToErrorResult(result, UserErrors.UserNotFound);
 
         return TypedResults.Ok(result.Value.ToDto());
     }
@@ -105,21 +115,13 @@ public static class UserEndpoints
         // Early 400 on the raw value, before any lookup or hashing.
         var passwordResult = Password.Create(changeUserPasswordDto.Password);
         if (passwordResult.IsFailure)
-            return TypedResults.BadRequest(passwordResult.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(passwordResult));
 
         var result = await userService.ChangePasswordAsync(id, changeUserPasswordDto.Password, cancellationToken);
         if (result.IsFailure)
-            return ToErrorResult(result.Error);
+            return ProblemDetailsHelper.ToErrorResult(result, UserErrors.UserNotFound);
 
         return TypedResults.NoContent();
-    }
-
-    // A missing user is a 404; any other failure (validation, unknown profile, ...) is a 400.
-    private static IResult ToErrorResult(Error error)
-    {
-        return error == UserErrors.UserNotFound
-            ? TypedResults.NotFound(error)
-            : TypedResults.BadRequest(error);
     }
 
     private static async Task<IResult> DeleteUser(
@@ -129,7 +131,7 @@ public static class UserEndpoints
     {
         var result = await userService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
 }

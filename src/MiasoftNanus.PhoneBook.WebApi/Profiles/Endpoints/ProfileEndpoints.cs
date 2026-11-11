@@ -1,6 +1,7 @@
 ﻿using MiasoftNanus.PhoneBook.Domain.Profiles.Services;
 using MiasoftNanus.PhoneBook.WebApi.Profiles.Dtos;
 using MiasoftNanus.PhoneBook.WebApi.Profiles.Mappers;
+using MiasoftNanus.PhoneBook.WebApi.Shared;
 
 namespace MiasoftNanus.PhoneBook.WebApi.Profiles.Endpoints;
 
@@ -12,11 +13,17 @@ public static class ProfileEndpoints
     public static void MapProfileEndpoints(this IEndpointRouteBuilder app)
     {
         var profileGroup = app.MapGroup("/profiles");
-        profileGroup.MapGet("/", GetProfileAll);
-        profileGroup.MapGet("/{id:guid}", GetProfileById);
-        profileGroup.MapPost("/", CreateProfile);
-        profileGroup.MapPut("/{id:guid}", UpdateProfile);
-        profileGroup.MapDelete("/{id:guid}", DeleteProfile);
+        profileGroup.MapGet("/", GetProfileAll)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapGet($"/{{id:guid}}", GetProfileById)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapPost("/", CreateProfile)
+            .ProducesProblem(StatusCodes.Status400BadRequest);
+        profileGroup.MapPut($"/{{id:guid}}", UpdateProfile)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status404NotFound);
+        profileGroup.MapDelete($"/{{id:guid}}", DeleteProfile)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> GetProfileAll(
@@ -25,7 +32,7 @@ public static class ProfileEndpoints
     {
         var result = await profileService.GetAllAsync(cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
 
         var profileDtos = result.Value.ToDto();
         return TypedResults.Ok(profileDtos);
@@ -38,7 +45,7 @@ public static class ProfileEndpoints
     {
         var result = await profileService.GetByIdAsync(id, cancellationToken);
         if (result.IsFailure)
-            return TypedResults.NotFound(result.Error);
+            return TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result));
         
         var profileDto = result.Value.ToDto();
         return TypedResults.Ok(profileDto);
@@ -51,11 +58,11 @@ public static class ProfileEndpoints
     {
         var resultProfile = createUpdateProfileDto.ToEntity();
         if(resultProfile.IsFailure)
-            return TypedResults.BadRequest(resultProfile.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(resultProfile));
 
         var result = await profileService.CreateAsync(resultProfile.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.BadRequest(result.Error)
+            ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
             : TypedResults.Created($"/profiles/{result.Value.Id}", result.Value);
     }
 
@@ -67,11 +74,11 @@ public static class ProfileEndpoints
     {
         var resultProfile = createUpdateProfileDto.ToEntity();
         if(resultProfile.IsFailure)
-            return TypedResults.BadRequest(resultProfile.Error);
+            return TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(resultProfile));
         
         var result = await profileService.UpdateAsync(id, resultProfile.Value, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.Ok(result.Value);
     }
 
@@ -82,7 +89,7 @@ public static class ProfileEndpoints
     {
         var result = await profileService.DeleteAsync(id, cancellationToken);
         return result.IsFailure
-            ? TypedResults.NotFound(result.Error)
+            ? TypedResults.NotFound(ProblemDetailsHelper.CreateNotFoundProblemDetails(result))
             : TypedResults.NoContent();
     }
 }
