@@ -15,24 +15,51 @@ public static class UserEndpoints
 {
     public static void MapUserEndpoints(this IEndpointRouteBuilder app)
     {
-        var userGroup = app.MapGroup("/users");
+        var userGroup = app.MapGroup("/api/v1/users")
+            .WithGroupName("v1")
+            .WithTags("Users")
+            .WithDescription("Endpoints for managing users.");
         userGroup.MapGet("/", GetUserAll)
+            .WithSummary("Get all users")
+            .WithDescription("Gets all users.")
+            .Produces<IEnumerable<UserDto>>()
             .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapGet($"/{{id:guid}}", GetUserById)
+            .WithSummary("Get user by ID")
+            .WithDescription("Gets a user by its ID.")
+            .Produces<UserDto>()
             .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapPost("/", CreateUser)
+            .WithSummary("Create user")
+            .WithDescription("Creates a new user.")
+            .Produces<UserDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest);
         userGroup.MapPut($"/{{id:guid}}", UpdateUser)
+            .WithSummary("Update user")
+            .WithDescription("Updates the details of an existing user.")
+            .Produces<UserDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapPatch($"/{{id:guid}}", PatchUser)
+            .WithSummary("Patch user")
+            .WithDescription(
+                "Partially updates a user using JSON Merge Patch (application/merge-patch+json). " +
+                "Only the fields sent are changed.")
             .Accepts<PatchUserDto>("application/merge-patch+json", "application/json")
+            .Produces<UserDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapPut($"/{{id:guid}}/password", ChangeUserPassword)
+            .WithSummary("Change user password")
+            .WithDescription(
+                "Changes the password of a user. The new password is validated before the user is looked up.")
+            .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         userGroup.MapDelete($"/{{id:guid}}", DeleteUser)
+            .WithSummary("Delete user")
+            .WithDescription("Deletes a user by its ID.")
+            .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
@@ -72,7 +99,7 @@ public static class UserEndpoints
         var result = await userService.CreateAsync(userResult.Value, cancellationToken);
         return result.IsFailure
             ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
-            : TypedResults.Created($"/users/{result.Value.Id}", result.Value.ToDto());
+            : TypedResults.Created($"/api/v1/users/{result.Value.Id}", result.Value.ToDto());
     }
 
     private static async Task<IResult> UpdateUser(

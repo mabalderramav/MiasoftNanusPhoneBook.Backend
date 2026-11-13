@@ -22,31 +22,69 @@ public static class AgendaEndpoints
 
     public static void MapAgendaEndpoints(this IEndpointRouteBuilder app)
     {
-        var agendaGroup = app.MapGroup("/agendas");
+        var agendaGroup = app.MapGroup("/api/v1/agendas")
+            .WithGroupName("v1")
+            .WithTags("Agendas")
+            .WithDescription("Endpoints for managing agendas and their photos.");
         agendaGroup.MapGet("/", GetAgendaAll)
+            .WithSummary("Get all agendas")
+            .WithDescription("Gets all agendas.")
+            .Produces<IEnumerable<AgendaDto>>()
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapGet($"/{{id:guid}}", GetAgendaById)
+            .WithSummary("Get agenda by ID")
+            .WithDescription("Gets an agenda by its ID.")
+            .Produces<AgendaDto>()
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapPost("/", CreateAgenda)
+            .WithSummary("Create agenda")
+            .WithDescription("Creates a new agenda.")
+            .Produces<AgendaDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest);
         agendaGroup.MapPut($"/{{id:guid}}", UpdateAgenda)
+            .WithSummary("Update agenda")
+            .WithDescription("Updates an existing agenda.")
+            .Produces<AgendaDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapPatch($"/{{id:guid}}", PatchAgenda)
+            .WithSummary("Patch agenda")
+            .WithDescription(
+                "Partially updates an agenda using JSON Merge Patch (application/merge-patch+json). " +
+                "Only the fields sent are changed.")
             .Accepts<PatchAgendaDto>("application/merge-patch+json", "application/json")
+            .Produces<AgendaDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapDelete($"/{{id:guid}}", DeleteAgenda)
+            .WithSummary("Delete agenda")
+            .WithDescription("Deletes an agenda by its ID. Requires the admin X-Api-Key header.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapPut($"/{{id:guid}}/photo", UploadPhotoAgenda)
+            .WithSummary("Upload agenda photo")
+            .WithDescription(
+                "Uploads or replaces the agenda photo as multipart/form-data (field 'photo'). " +
+                "Allowed formats: .jpg, .jpeg, .png, .webp. Max 2 MB photo / 3 MB request.")
             .DisableAntiforgery()
             .WithMetadata(new RequestSizeLimitAttribute(MaxPhotoRequestSize))
             .WithFormOptions(multipartBodyLengthLimit: MaxPhotoRequestSize)
+            .Produces<AgendaDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapGet($"/{{id:guid}}/photo", GetPhotoAgenda)
+            .WithSummary("Get agenda photo")
+            .WithDescription(
+                "Downloads the agenda photo. The content type is taken from the stored file extension.")
+            .Produces(StatusCodes.Status200OK, typeof(Stream), contentType: "image/jpeg",
+                additionalContentTypes: ["image/png", "image/webp", "application/octet-stream"])
             .ProducesProblem(StatusCodes.Status404NotFound);
         agendaGroup.MapDelete($"/{{id:guid}}/photo", DeletePhotoAgenda)
+            .WithSummary("Delete agenda photo")
+            .WithDescription("Deletes the agenda photo. Requires the admin X-Api-Key header.")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
@@ -86,7 +124,7 @@ public static class AgendaEndpoints
         var result = await agendaService.CreateAsync(agendaResult.Value, cancellationToken);
         return result.IsFailure
             ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
-            : TypedResults.Created($"/agendas/{result.Value.Id}", result.Value.ToDto());
+            : TypedResults.Created($"/api/v1/agendas/{result.Value.Id}", result.Value.ToDto());
     }
 
     private static async Task<IResult> UpdateAgenda(

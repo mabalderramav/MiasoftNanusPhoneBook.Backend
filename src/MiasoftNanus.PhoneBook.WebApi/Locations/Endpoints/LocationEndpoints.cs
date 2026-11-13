@@ -12,17 +12,35 @@ public static class LocationEndpoints
 {
     public static void MapLocationEndpoints(this IEndpointRouteBuilder app)
     {
-        var locationGroup = app.MapGroup("/locations");
+        var locationGroup = app.MapGroup("/api/v1/locations")
+            .WithGroupName("v1")
+            .WithTags("Locations")
+            .WithDescription("Endpoints for managing locations.");
         locationGroup.MapGet("/", GetLocationAll)
+            .WithSummary("Get all locations")
+            .WithDescription("Gets all locations.")
+            .Produces<IEnumerable<LocationDto>>()
             .ProducesProblem(StatusCodes.Status404NotFound);
-        locationGroup.MapGet("/{id:guid}", GetLocationById)
+        locationGroup.MapGet($"/{{id:guid}}", GetLocationById)
+            .WithSummary("Get location by ID")
+            .WithDescription("Gets a location by its ID.")
+            .Produces<LocationDto>()
             .ProducesProblem(StatusCodes.Status404NotFound);
         locationGroup.MapPost("/", CreateLocation)
+            .WithSummary("Create location")
+            .WithDescription("Creates a new location.")
+            .Produces<LocationDto>(StatusCodes.Status201Created)
             .ProducesProblem(StatusCodes.Status400BadRequest);
-        locationGroup.MapPut("/{id:guid}", UpdateLocation)
+        locationGroup.MapPut($"/{{id:guid}}", UpdateLocation)
+            .WithSummary("Update location")
+            .WithDescription("Updates an existing location.")
+            .Produces<LocationDto>()
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound);
-        locationGroup.MapDelete("/{id:guid}", DeleteLocation)
+        locationGroup.MapDelete($"/{{id:guid}}", DeleteLocation)
+            .WithSummary("Delete location")
+            .WithDescription("Deletes a location by its ID.")
+            .Produces(StatusCodes.Status204NoContent)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
@@ -63,7 +81,7 @@ public static class LocationEndpoints
         var result = await locationService.CreateAsync(locationResult.Value, cancellationToken);
         return result.IsFailure
             ? TypedResults.BadRequest(ProblemDetailsHelper.CreateBadRequestProblemDetails(result))
-            : TypedResults.Created($"/locations/{result.Value.Id}", result.Value.ToDto());
+            : TypedResults.Created($"/api/v1/locations/{result.Value.Id}", result.Value.ToDto());
     }
 
     private static async Task<IResult> UpdateLocation(
