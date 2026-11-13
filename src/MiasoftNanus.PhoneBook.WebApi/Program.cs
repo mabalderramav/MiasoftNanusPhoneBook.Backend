@@ -27,9 +27,12 @@ try
 
     app.UseExceptionHandler();
     app.UseStatusCodePages();
+    app.MapOpenApi();
+    app.MapScalarApiReferenceOpenApiExtension();
+    app.UseSwaggerUiOpenApiExtension()
+        .UseReDocOpenApiExtension();
     if (builder.Environment.IsDevelopment())
     {
-        app.MapOpenApi();
         await app.MigrateDatabaseAsync();
     }
 
