@@ -1,4 +1,5 @@
 using MiasoftNanus.PhoneBook.WebApi.Extensions;
+using MiasoftNanus.PhoneBook.WebApi.Shared.Constants;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ try
     builder.Services.AddProblemDetailsAndExceptionsBuilderExtensions();
     builder.Services.AddApplicationConfigurationServices(builder.Configuration);
     builder.Services.AddApplicationLayersServices(builder.Configuration);
+    builder.Services.AddAppCorsService();
 
     #endregion
 
@@ -36,6 +38,7 @@ try
         await app.MigrateDatabaseAsync();
     }
 
+    app.UseCors(PolicyName.AllowSpecificOrigin);
     app.UseHttpsRedirection();
     app.MapEndpoints();
 
